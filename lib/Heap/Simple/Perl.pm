@@ -3,7 +3,7 @@ use strict;
 use Carp;
 
 use vars qw($VERSION $auto %used);
-$VERSION = "0.08";
+$VERSION = "0.09";
 $auto = "Auto";
 %used = ();
 
