@@ -49,13 +49,13 @@ sub key_insert {
                 $l *= 2;
             }
         _CAN_DIE(        1
-    } || $heap->e_recover($l, $min);)
+    } || $heap->_e_recover($l, $min);)
     $heap->[$l >> 1] = _WRAPPER($key, shift);
     return;})
     _CAN_DIE(eval {)
     $i = $i >> 1 while 
         $i > 1 && _SMALLER($key, _KEY(($heap->[$i] = $heap->[$i >> 1])));
-    _CAN_DIE(1} || $heap->i_recover($i);)
+    _CAN_DIE(1} || $heap->_i_recover($i);)
     $heap->[$i] = _WRAPPER($key, shift);
     return};
     ');
@@ -89,13 +89,13 @@ sub _key_insert {
                 $l *= 2;
             }
         _CAN_DIE(        1
-    } || $heap->e_recover($l, $min);)
+    } || $heap->_e_recover($l, $min);)
     $heap->[$l >> 1] = shift;
     return;})
     _CAN_DIE(eval {)
     $i = $i >> 1 while 
         $i > 1 && _SMALLER($key, _KEY(($heap->[$i] = $heap->[$i >> 1])));
-    _CAN_DIE(1} || $heap->i_recover($i);)
+    _CAN_DIE(1} || $heap->_i_recover($i);)
     $heap->[$i] = shift;
     return};
     ');

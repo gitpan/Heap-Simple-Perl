@@ -1,8 +1,8 @@
 #!/usr/bin/perl -w
 # Before `make install' is performed this script should be runnable with
-# `make test'. After `make install' it should work as `perl t/1.t'
+# `make test'. After `make install' it should work as `perl t/01_basic.t'
 
-use warnings;	# Remove this for production. Assumes perl 5.6
+# use warnings;	# Remove this for production. Assumes perl 5.6
 use strict;
 
 BEGIN { $^W = 1 };
@@ -18,6 +18,9 @@ is(Heap::Simple->implementation, "Heap::Simple::Perl");
 
 # Same very basic checks
 my $heap = Heap::Simple->new;
+isa_ok($heap, "Heap::Simple", "We get the type we asked for");
+isa_ok($heap, Heap::Simple->implementation, 
+       "And it's also of the expected implementor type");
 is($heap->count, 0);
 my $val = 5;
 $heap->insert($val);

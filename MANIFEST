@@ -16,6 +16,7 @@ lib/Heap/Simple/Perl.pm
 lib/Heap/Simple/String.pm
 lib/Heap/Simple/StringReverse.pm
 lib/Heap/Simple/Wrapper.pm
+t/00_load.t
 t/01_basic.t
 t/02_stress.t
 t/03_magic.t

@@ -1,13 +1,24 @@
-Revision history for Perl extension Heap::Simple.
+Revision history for Perl extension Heap::Simple::Perl.
 
 Plan:
   - Deleting
-  - return undef on underflow if requested
   - Tied interface
   - Special handling for duplicate keys (error, share, overwrite, separate)
   - add a callback for elements lost in max_count overflow
+  - _make should probably also do the followup call. the current way is too
+    error prone
+  - The "self-absorb" test may in fact give false positives on systems where
+    addresses can be so big they don't fit in an NV with full resolution.
 
-0.07
+0.08  2004-11-06
+	- Removed a few stray "use warnings" in the tests
+        - Added a basic "load the module directly" test since the indirection
+          through Heap::Simple hides load errors.
+	- Added _ before the name of the recover methods since they aren't
+	  part of the official API
+	- Only expand all uppercase macros
+
+0.07  2004-10-25
         - Split off Heap::Simple to its own package. This package is now
           Heap::Simple::Perl
         - Add a "top" method.
@@ -17,6 +28,8 @@ Plan:
 	- Generate code in proper package and with proper name
 	  (defining a function twice is now a redefine warning)
         - _make substitutions functions must start with _, not just contain it
+	- _make macro expansion now has proper argument parsing
+	- _make now does some very trivial code elimination
 	- drop the (always undocumented) internal _init method.
 	  It was too awkward to use anyways.
         - Move perl code to Simple/Perl.pm in preparation for an XS switch
@@ -29,9 +42,15 @@ Plan:
 	- Replace test suite with a much cleaner one
         - More fair speed testing
         - Added speed compare with Array::Heap2
-	- Added "wrapped", "order" and "elements" methods.
+	- Added "wrapped", "order", "elements" and "dirty" methods.
         - Make index 0 into a hash now that more and more attributes get added
 	- Save and restore $@ around _make() based code creation.
+        - Support max_count
+	- add absorb() and key_absorb methods
+	- added _absorb, _key_absorb and _key_insert helper functions, but they
+	  are undocumented (not part of the official interface)
+	- placeholders that croak with a nice error message for all methods that
+	  don't always exist.
 
 0.06  2004-09-29
         - Don't scare away users by directly explaining all possibilities in

@@ -3,7 +3,7 @@ use strict;
 use Carp;
 
 use vars qw($VERSION $auto %used);
-$VERSION = "0.07";
+$VERSION = "0.08";
 $auto = "Auto";
 %used = ();
 
@@ -170,7 +170,7 @@ sub _make {
 
     my $string = "package $package;\n" . shift;
     # Very simple macro expander, but ignore literal strings
-    1 while $string =~ s!(\b_\w+)\(($balanced)\)!my $f=$1; $_self->$f($2 =~ /[^(),]+(?:\($balanced\)[^(),]*)*|(?:\($balanced\)[^(),]*)+/g)!seg;
+    1 while $string =~ s!(\b_[A-Z_]+)\(($balanced)\)!my $f=$1; $_self->$f($2 =~ /[^(),]+(?:\($balanced\)[^(),]*)*|(?:\($balanced\)[^(),]*)+/g)!seg;
     if ($string =~ /\bmy\s+\$(\w+)\s*=\s*shift;/g) {
         my $var = $1;
         $string =~ /\$$var\b/g || croak "$_self uses \$$var only once ($string)";
@@ -286,12 +286,12 @@ sub insert {
                 $l *= 2;
             }
         _CAN_DIE(        1
-    } || $heap->e_recover($l, $min);)
+    } || $heap->_e_recover($l, $min);)
     $heap->[$l >> 1] = $key;
     return;})
     _CAN_DIE(eval {)
         $i = $i >> 1 while $i > 1 && _SMALLER($key, ($heap->[$i] = $heap->[$i >> 1]))
-    _CAN_DIE(; 1} || $heap->i_recover($i));
+    _CAN_DIE(; 1} || $heap->_i_recover($i));
     $heap->[$i] = $key;
     return}');
     } else {
@@ -320,13 +320,13 @@ sub insert {
                 $l *= 2;
             }
         _CAN_DIE(        1
-    } || $heap->e_recover($l, $min);)
+    } || $heap->_e_recover($l, $min);)
     $heap->[$l >> 1] = _WRAPPER($key, $value);
     return;})
     _CAN_DIE(eval {)
         $i = $i >> 1 while
         $i > 1 && _SMALLER($key, _KEY(($heap->[$i] = $heap->[$i >> 1])));
-    _CAN_DIE(1} || $heap->i_recover($i);)
+    _CAN_DIE(1} || $heap->_i_recover($i);)
     $heap->[$i] = _WRAPPER($key, $value);
     return}');
     }
@@ -410,7 +410,7 @@ sub extract_top {
             $l *= 2;
         }
     _CAN_DIE(        1
-    } || $heap->e_recover($l, $min);)
+    } || $heap->_e_recover($l, $min);)
     $heap->[$l >> 1] = pop(@$heap);
     return _VALUE($min);
 }');
@@ -449,7 +449,7 @@ sub extract_min {
             $l *= 2;
         }
     _CAN_DIE(        1;
-    } || $heap->e_recover($l, $min);)
+    } || $heap->_e_recover($l, $min);)
     $heap->[$l >> 1] = pop(@$heap);
     return _VALUE($min)
 }');
@@ -488,7 +488,7 @@ sub extract_first {
             $l *= 2;
         }
     _CAN_DIE(        1;
-    } || $heap->e_recover($l, $min);)
+    } || $heap->_e_recover($l, $min);)
     $heap->[$l >> 1] = pop(@$heap);
     return _VALUE($min)
 }');
@@ -645,7 +645,7 @@ sub infinity {
 }
 
 # Recover from a partially executed insert
-sub i_recover {
+sub _i_recover {
     my ($heap, $end, $err) = @_;
     $err ||= $@ || die "Assertion failed: No exception pending";
     my @indices;
@@ -661,7 +661,7 @@ sub i_recover {
 }
 
 # Recover from a partially executed extract
-sub e_recover {
+sub _e_recover {
     my ($heap, $end, $min, $err) = @_;
     $err ||= $@ || die "Assertion failed: No exception pending";
     $end >>= 1;

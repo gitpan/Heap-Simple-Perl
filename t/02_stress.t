@@ -1,8 +1,8 @@
 #!/usr/bin/perl -w
 # Before `make install' is performed this script should be runnable with
-# `make test'. After `make install' it should work as `perl t/1.t'
+# `make test'. After `make install' it should work as `perl t/02_stress.t'
 
-use warnings;	# Remove this for production. Assumes perl 5.6
+# use warnings;	# Remove this for production. Assumes perl 5.6
 use strict;
 
 BEGIN { $^W = 1 };
@@ -330,6 +330,9 @@ is_deeply($fake->extract_top, [9]);
 is($fake->top_key, 55);
 is_deeply($fake->extract_top, [11]);
 is_deeply($fake->extract_top, [100]);
+
+# Check proper cleanup of already added stuff on a croak
+eval { $class->new(infinity => Canary->new(5), order => "waf") };
 
 $fake = undef;
 $code = undef;
