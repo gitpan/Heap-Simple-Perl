@@ -10,6 +10,11 @@ Plan:
   - The "self-absorb" test may in fact give false positives on systems where
     addresses can be so big they don't fit in an NV with full resolution.
 
+0.10  2005-07-27
+	- removed a stray print from t/speed_array
+	- Replaced :: by - in author email address (easier quoting for mailers)
+        - Don't run benchmarks unless asked for during Makefile.PL
+
 0.09  2004-11-12
 	- Minor update, only the tests are changed to work with perl 5.6.1:
 	    - Some tests triggered a 5.6.1 issue where -0 differs from 0

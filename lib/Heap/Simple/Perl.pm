@@ -3,7 +3,7 @@ use strict;
 use Carp;
 
 use vars qw($VERSION $auto %used);
-$VERSION = "0.09";
+$VERSION = "0.10";
 $auto = "Auto";
 %used = ();
 
@@ -723,7 +723,7 @@ L<Heap::Simple::XS>
 
 =head1 AUTHOR
 
-Ton Hospel, E<lt>Heap::Simple@ton.iguana.beE<gt>
+Ton Hospel, E<lt>Heap-Simple@ton.iguana.beE<gt>
 
 Parts are inspired by code by Joseph N. Hall
 L<http://www.perlfaq.com/faqs/id/196>
