@@ -10,6 +10,20 @@ Plan:
   - The "self-absorb" test may in fact give false positives on systems where
     addresses can be so big they don't fit in an NV with full resolution.
 
+0.11  2005-11-20
+	- Add extract_all method
+	- Add merge_arrays method
+	- inserts can now handle multiple elements as argument
+	- absorb and key_absorb use the new multi-inserts
+	- absorb and key_absorb now take any number of heaps as argument 
+          instead of absorbing exactly one.
+	- Special characters in generated constant strings were incorrectly
+	  escaped (bugfix)
+	- key_method doesn't return literal strings anymore in the "complex"
+	  case (also causes the above mentioned bug to never trigger)
+	- make the internal _STRING and _LITERAL macros never see each others
+	  output (this is possibly a bugfix)
+
 0.10  2005-07-27
 	- removed a stray print from t/speed_array
 	- Replaced :: by - in author email address (easier quoting for mailers)

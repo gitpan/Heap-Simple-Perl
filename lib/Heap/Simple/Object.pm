@@ -2,16 +2,18 @@ package Heap::Simple::Object;
 require Heap::Simple::Wrapper;
 require Heap::Simple::Method;
 @ISA = qw(Heap::Simple::Wrapper Heap::Simple::Method);
-$VERSION = "0.02";
+$VERSION = "0.03";
 use strict;
 
-sub _MAKE_KEY {
-    my ($heap, $key, $value) = @_;
+sub _REAL_KEY {
+    my $heap = shift;
     return defined $heap->[0]{index} ? 
-        $heap->[0]{complex} ? 
-        "my \$meth = \$heap->[0]{index}; $key $value->\$meth" :
-        "$key $value->_LITERAL" :
-        qq(_CROAK "Element type 'Object' without key method");
+        $heap->Heap::Simple::Method::_KEY(@_) :
+        qq(Carp::croak("Element type 'Object' without key method"));
+}
+
+sub _REAL_ELEMENTS_PREPARE {
+    return shift->Heap::Simple::Method::_ELEMENTS_PREPARE(@_);
 }
 
 sub key {
@@ -19,8 +21,8 @@ sub key {
     if ($heap->[0]{complex}) {
         $heap->_make('sub key {
     my $heap = shift;
-    _ELEMENTS_PREPARE()
-    _MAKE_KEY(return, shift)}');
+    _REAL_ELEMENTS_PREPARE()
+    return _REAL_KEY(shift)}');
     } else {
         $heap->_make('sub key {
     return $_[1]->_LITERAL}');

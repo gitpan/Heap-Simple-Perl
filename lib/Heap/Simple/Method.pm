@@ -1,5 +1,5 @@
 package Heap::Simple::Method;
-$VERSION = "0.04";
+$VERSION = "0.05";
 use strict;
 use Carp;
 
@@ -35,9 +35,15 @@ sub _QUICK_KEY {
 
 sub key_method {
     my $heap = shift;
-    $heap->_make(qq(sub key_method() {
+    if ($heap->[0]{complex}) {
+        $heap->_make(qq(sub key_method {
+    return shift->[0]{index};
+}));
+    } else {
+        $heap->_make(qq(sub key_method() {
     return _STRING;
 }));
+    }
     return $heap->key_method(@_);
 }
 

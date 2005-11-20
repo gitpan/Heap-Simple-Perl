@@ -3,7 +3,7 @@ use strict;
 use Carp;
 
 use vars qw($VERSION $auto %used);
-$VERSION = "0.10";
+$VERSION = "0.11";
 $auto = "Auto";
 %used = ();
 
@@ -124,22 +124,42 @@ sub _INF {
 }
 
 sub _CAN_DIE {
-    return shift->[0]{can_die} ? shift : "";
+    return shift->[0]{can_die} ? shift : @_ > 1 ? $_[1] : "";
+}
+
+sub _CANT_DIE {
+    return shift->[0]{can_die} ? "" : shift;
 }
 
 sub _MAX_COUNT {
-    return shift->[0]{max_count} ? shift : "";
+    return shift->[0]{max_count} ? shift : @_ > 1 ? $_[1] : "";
 }
 
-sub _MAKE_KEY {
-    my ($heap, $key, $value) = @_;
-    return "$key " . $heap->_KEY($value);
+sub _THE_MAX_COUNT {
+    return shift->[0]{max_count} || croak "undefined max_count";
+}
+
+sub _REAL_KEY {
+    return shift->_KEY(@_);
+}
+
+sub _REAL_ELEMENTS_PREPARE {
+    return shift->_ELEMENTS_PREPARE(@_);
+}
+
+sub _REAL_PREPARE {
+    my $heap = shift;
+    return join("", $heap->_ORDER_PREPARE, $heap->_REAL_ELEMENTS_PREPARE);
 }
 
 # Returning "-" means it should not get used
 # (should cause a syntax error on accidental use)
 sub _QUICK_KEY {
     return "-";
+}
+
+sub _COMMA {
+    return ",";
 }
 
 my %stringify =
@@ -153,13 +173,15 @@ my %stringify =
 # currently loses utf8 when the resulting string gets used
 sub _stringify {
     defined(my $str = shift) || croak "undefined access";
-    $str =~ s/[\"\\\n\r\$\@]/$stringify{$1}/g;	# "
+    $str =~ s/([\"\\\n\r\$\@])/$stringify{$1}/g;	# "
     return qq("$str");
 }
 
-my $balanced;
-# String with balanced parenthesis
-$balanced = qr{[^()]*(?:\((??{$balanced})\)[^()]*)*};
+my ($balanced, $sequence);
+# String with balanced parenthesis (but not balanced {}. We use that)
+$balanced = qr{[^()\[\],]*(?:(?:\((??{$sequence})\)|\[(??{$sequence})\])[^()\[\],]*)*};
+$sequence = qr{$balanced(?:,$balanced)*};
+
 sub _make {
     # Use $_self so there is less chance of the eval using $heap and surviving
     my $_self  = shift;
@@ -170,7 +192,8 @@ sub _make {
 
     my $string = "package $package;\n" . shift;
     # Very simple macro expander, but ignore literal strings
-    1 while $string =~ s!(\b_[A-Z_]+)\(($balanced)\)!my $f=$1; $_self->$f($2 =~ /[^(),]+(?:\($balanced\)[^(),]*)*|(?:\($balanced\)[^(),]*)+/g)!seg;
+    1 while $string =~ s!(\b_[A-Z_]+)\(($sequence)\)!my $f=$1; 
+$_self->$f($2 =~ /($balanced),?/g)!seg;
     if ($string =~ /\bmy\s+\$(\w+)\s*=\s*shift;/g) {
         my $var = $1;
         $string =~ /\$$var\b/g || croak "$_self uses \$$var only once ($string)";
@@ -182,12 +205,12 @@ sub _make {
             # main::diag("Now: $string");
         }
     }
-    $string =~ s/(sub\s+\w+)\s*{.*\b_CROAK\b\s*(\"[^\"]+\");.*}/$1 { Carp::croak $2 }/s; # "
-    $string =~ s/\b_MAX_COUNT\b/$_self->[0]{max_count} || croak "undefined max_count"/eg;
-    $string =~ s/\b_LITERAL\b/defined $_self->[0]{index} ? $_self->[0]{index} : croak "undefined access"/eg;
-    # Important that _STRING is the last one,
-    # since it can expand to contain the others
-    $string =~ s/\b_STRING\b/_stringify($_self->[0]{index})/eg;
+    # $string =~ s/(sub\s+\w+)\s*{.*\bCarp::croak\b\s*(\"[^\"]+\");.*}/$1 { Carp::croak $2 }/s; # "
+    # Important that these are last one since they can expand to something 
+    # that contain the others
+    $string =~ s/\b_(LITERAL|STRING)\b/$1 eq "LITERAL" ?
+        defined $_self->[0]{index} ? $_self->[0]{index} : croak("undefined access") :
+        _stringify($_self->[0]{index})/eg;
     print STDERR "Code:\n$string\n" if DEBUG;
     my $err = $@;
     eval $string;
@@ -199,16 +222,23 @@ sub count {
     return $#{+shift};
 }
 
+sub extract_all {
+    my $heap = shift;
+    return map $heap->extract_top, 2..@$heap;
+}
+
 sub clear {
     $#{+shift} = 0;
 }
 
 sub absorb {
-    $_[1]->_absorb($_[0]);
+    my $heap = shift;
+    $_->_absorb($heap) for @_;
 }
 
-sub key_absorb {
-    $_[1]->_key_absorb($_[0]);
+sub key_absorb{
+    my $heap = shift;
+    $_->_key_absorb($heap) for @_;
 }
 
 sub wrapped {
@@ -263,11 +293,44 @@ sub insert {
     my $heap = shift;
     if ($heap->_KEY("") eq "") {
         $heap->_make('sub insert {
-    my ($heap, $key) = @_;
+    my $heap = shift;
     _ORDER_PREPARE()
+    _CANT_DIE(
+    _MAX_COUNT(my $available = _THE_MAX_COUNT()-$#$heap;)
+    if (@_ > 1 _MAX_COUNT(&& $available > 1)) {
+	my $first = @$heap;
+        my $i = push(@$heap, _MAX_COUNT(splice(@_, 0, $available), @_))-1;
+	my @todo = reverse $first/2..$#$heap/2;
+        while (my $j = shift @todo) {
+	    my $key = $heap->[$j];
+            my $l = $j*2;
+            while ($l < $i) {
+                if (_SMALLER(_KEY($heap->[$l]), $key)) {
+                    $l++ if _SMALLER(_KEY($heap->[$l+1]), _KEY($heap->[$l]));
+                } elsif (!(_SMALLER(_KEY($heap->[++$l]), $key))) {
+                    $l--;
+                    last;
+                }
+                $heap->[$l >> 1] = $heap->[$l];
+                $l *= 2;
+            }
+            if ($l == $i && _SMALLER(_KEY($heap->[$l]), $key)) {
+                $heap->[$l >> 1] = $heap->[$l];
+            } else {
+		$l >>= 1;
+	    }
+            if ($j != $l) {
+                $heap->[$l] = $key;
+                $l >>= 1;
+                push(@todo, $l) if !@todo || $l < $todo[0];
+            }
+        }
+	return _MAX_COUNT(unless @_);
+    })
+    for my $key (@_) {
     my $i = @$heap;
-    _MAX_COUNT(if ($i > _MAX_COUNT) {
-        return unless _SMALLER(_KEY($heap->[1]), $key);
+    _MAX_COUNT(if ($i > _THE_MAX_COUNT()) {
+        next unless _SMALLER(_KEY($heap->[1]), $key);
         $i--;
         my $l = 2;
         _CAN_DIE(my $min = $heap->[1]; eval {)
@@ -288,20 +351,54 @@ sub insert {
         _CAN_DIE(        1
     } || $heap->_e_recover($l, $min);)
     $heap->[$l >> 1] = $key;
-    return;})
+    next;})
     _CAN_DIE(eval {)
         $i = $i >> 1 while $i > 1 && _SMALLER($key, ($heap->[$i] = $heap->[$i >> 1]))
     _CAN_DIE(; 1} || $heap->_i_recover($i));
     $heap->[$i] = $key;
-    return}');
+    }}');
     } else {
         $heap->_make('sub insert {
-    my ($heap, $value) = @_;
+    my $heap = shift;
     _PREPARE()
-    _MAKE_KEY(my $key =, $value);
+    _CANT_DIE(
+    _MAX_COUNT(my $available = _THE_MAX_COUNT()-$#$heap;)
+    if (@_ > 1 _MAX_COUNT(&& $available > 1)) {
+	my $first = @$heap;
+        my $i = push(@$heap, _MAX_COUNT(splice(@_, 0, $available), @_))-1;
+	my @todo = reverse $first/2..$#$heap/2;
+        while (my $j = shift @todo) {
+	    my $value = $heap->[$j];
+            my $key = _KEY($value);
+            my $l = $j*2;
+            while ($l < $i) {
+                if (_SMALLER(_KEY($heap->[$l]), $key)) {
+                    $l++ if _SMALLER(_KEY($heap->[$l+1]), _KEY($heap->[$l]));
+                } elsif (!(_SMALLER(_KEY($heap->[++$l]), $key))) {
+                    $l--;
+                    last;
+                }
+                $heap->[$l >> 1] = $heap->[$l];
+                $l *= 2;
+            }
+            if ($l == $i && _SMALLER(_KEY($heap->[$l]), $key)) {
+                $heap->[$l >> 1] = $heap->[$l];
+            } else {
+		$l >>= 1;
+	    }
+            if ($j != $l) {
+                $heap->[$l] = $value;
+                $l >>= 1;
+                push(@todo, $l) if !@todo || $l < $todo[0];
+            }
+        }
+	return _MAX_COUNT(unless @_);
+    })
+    for my $value (@_) {
+    my $key = _REAL_KEY($value);
     my $i = @$heap;
-    _MAX_COUNT(if ($i > _MAX_COUNT) {
-        return unless _SMALLER(_KEY($heap->[1]), $key);
+    _MAX_COUNT(if ($i > _THE_MAX_COUNT()) {
+        next unless _SMALLER(_KEY($heap->[1]), $key);
         $i--;
         my $l = 2;
         _CAN_DIE(my $min = $heap->[1]; eval {)
@@ -322,13 +419,13 @@ sub insert {
         _CAN_DIE(        1
     } || $heap->_e_recover($l, $min);)
     $heap->[$l >> 1] = _WRAPPER($key, $value);
-    return;})
+    next;})
     _CAN_DIE(eval {)
         $i = $i >> 1 while
         $i > 1 && _SMALLER($key, _KEY(($heap->[$i] = $heap->[$i >> 1])));
     _CAN_DIE(1} || $heap->_i_recover($i);)
     $heap->[$i] = _WRAPPER($key, $value);
-    return}');
+    }}');
     }
     $heap->insert(@_);
 }
@@ -566,8 +663,8 @@ sub key {
     } else {
         $heap->_make('sub key {
     my $heap = shift;
-    _ELEMENTS_PREPARE()
-    _MAKE_KEY(return, shift)}');
+    _REAL_ELEMENTS_PREPARE()
+    return _REAL_KEY(shift)}');
     }
     return $heap->key(@_);
 }
@@ -603,14 +700,35 @@ sub values {
 
 sub _absorb {
     my $heap = shift;
-    $heap->_make('sub _absorb {
+    if ($heap->_VALUE("") eq "") {
+        $heap->_make('sub _absorb {
     my ($heap, $to) = @_;
     Carp::croak "Self absorption" if $heap == $to;
+    if (@$heap > 2 && !$to->can_die) {
+        $to->insert(@$heap[1..$#$heap]);
+        $#$heap = 0;
+        return;
+    }
     while (@$heap > 1) {
         $to->insert(_VALUE($heap->[-1]));
         pop @$heap;
     }
 }');
+    } else {
+        $heap->_make('sub _absorb {
+    my ($heap, $to) = @_;
+    Carp::croak "Self absorption" if $heap == $to;
+    if (@$heap > 2 && !$to->can_die) {
+        $to->insert(map _VALUE($_), @$heap[1..$#$heap]);
+        $#$heap = 0;
+        return;
+    }
+    while (@$heap > 1) {
+        $to->insert(_VALUE($heap->[-1]));
+        pop @$heap;
+    }
+}');
+    }
     return $heap->_absorb(@_);
 }
 
@@ -620,6 +738,11 @@ sub _key_absorb {
     my ($heap, $to) = @_;
     Carp::croak "Self absorption" if $heap == $to;
     _ELEMENTS_PREPARE()
+    if (@$heap > 2 && !$to->can_die) {
+        $to->key_insert(map +(_KEY($_), _VALUE($_)), @$heap[1..$#$heap]);
+        $#$heap = 0;
+        return;
+    }
     while (@$heap > 1) {
         $to->key_insert(_KEY($heap->[-1]), _VALUE($heap->[-1]));
         pop @$heap;
@@ -668,6 +791,147 @@ sub _e_recover {
     $heap->[$end] = $heap->[$end >> 1] while ($end >>=1) > 1;
     $heap->[1] = $min;
     die $err;
+}
+
+sub merge_arrays {
+    my $heap = shift;
+    $heap->_make('sub merge_arrays {
+    if (@_ <= 2) {
+        return [] if @_ <= 1;
+        my $array = $_[1];
+        _MAX_COUNT(my $start = @$array - _THE_MAX_COUNT();
+        return [@$array[$start..$#$array]] if $start > 0;)
+        return [@$array];
+    }
+    my $heap = shift;
+    my @heap = (undef);
+    _REAL_PREPARE()
+    my $key;
+    my $left = 0;
+    _MAX_COUNT(my $sorted;)
+    for my $array (@_) {
+        next if !@$array;
+        _MAX_COUNT(if ($#heap == _THE_MAX_COUNT()) {
+            unless ($sorted) {
+                my $half = _THE_MAX_COUNT() >> 1;
+                while ($half) {
+                    my $l = $half * 2;
+                    my $work = $heap[$half--];
+                    while ($l < _THE_MAX_COUNT()) {
+                        if (_SMALLER($heap[$l][0], $work->[0])) {
+                            $l++ if _SMALLER($heap[$l+1][0], $heap[$l][0]);
+                        } elsif (!(_SMALLER($heap[++$l][0], $work->[0]))) {
+                            $l--;
+                            last;
+                        }
+                        $heap[$l >> 1] = $heap[$l];
+                        $l *= 2;
+                    }
+                    if ($l == _THE_MAX_COUNT() && _SMALLER($heap[_THE_MAX_COUNT()][0], $work->[0])) {
+                        $heap[_THE_MAX_COUNT() >> 1] = $heap[_THE_MAX_COUNT()];
+                        $l = _THE_MAX_COUNT() * 2;
+                    }
+                    $heap[$l >> 1] = $work;
+                }
+                $sorted = 1;
+            }
+
+            $key = _REAL_KEY($array->[-1]);
+            next unless _SMALLER($heap[1][0], $key);
+            my $l = 2;
+            while ($l < _THE_MAX_COUNT()) {
+                if (_SMALLER($heap[$l][0], $key)) {
+                    $l++ if _SMALLER($heap[$l+1][0], $heap[$l][0]);
+                } elsif (!(_SMALLER($heap[++$l][0], $key))) {
+                    $l--;
+                    last;
+                }
+                $heap[$l >> 1] = $heap[$l];
+                $l *= 2;
+            }
+            if ($l == _THE_MAX_COUNT() && _SMALLER($heap[_THE_MAX_COUNT()][0], $key)) {
+                $heap[_THE_MAX_COUNT() >> 1] = $heap[_THE_MAX_COUNT()];
+            } else {
+                $l >>= 1;
+            }
+            $left -= $heap[$l][2];
+            $heap[$l] = [$key, $array, $#$array];
+            $left += $heap[$l][2];
+            next;
+        })
+        push(@heap, [_REAL_KEY($array->[-1]), $array, $#$array]);
+        $left += @$array;
+    }
+
+    if (@heap <= 2) {
+        return [] if @heap <= 1;
+        my $array = $heap[1][1];
+        _MAX_COUNT(my $start = @$array - _THE_MAX_COUNT();
+        return [@$array[$start..$#$array]] if $start > 0;)
+        return [@$array];
+    }
+
+    my $n = $#heap;
+    my $half = $n >> 1;
+    while ($half) {
+        my $l = $half * 2;
+        my $work = $heap[$half--];
+        while ($l < $n) {
+            if (_SMALLER($work->[0], $heap[$l][0])) {
+                $l++ if _SMALLER($heap[$l][0], $heap[$l+1][0]);
+            } elsif (!(_SMALLER($work->[0], $heap[++$l][0]))) {
+                $l--;
+                last;
+            }
+            $heap[$l >> 1] = $heap[$l];
+            $l *= 2;
+        }
+        if ($l == $n && _SMALLER($work->[0], $heap[$l][0])) {
+            $heap[$l >> 1] = $heap[$l];
+            $l *= 2;
+        }
+        $heap[$l >> 1] = $work;
+    }
+
+    _MAX_COUNT($left = _THE_MAX_COUNT() if $left > _THE_MAX_COUNT();)
+    my @result;
+    while (1) {
+        my $work = $heap[1];
+        my $j = $work->[2];
+        $result[--$left] = $work->[1][$j--];
+        _MAX_COUNT(return \@result unless $left;)
+        if ($j >= 0) {
+            $key = _REAL_KEY($work->[1][$j]);
+            $work->[0] = $key;
+            $work->[2] = $j;
+        } else {
+            $work = pop @heap;
+            if (--$n <= 1) {
+                $left--;
+                @result[0..$left] = @{$work->[1]}[$work->[2]-$left..$work->[2]];
+                return \@result;
+            }
+            $key = $work->[0];
+        }
+        my $l = 2;
+        while ($l < $n) {
+            if (_SMALLER($key, $heap[$l][0])) {
+                $l++ if _SMALLER($heap[$l][0], $heap[$l+1][0]);
+            } elsif (!(_SMALLER($key, $heap[++$l][0]))) {
+                $l--;
+                last;
+            }
+            $heap[$l >> 1] = $heap[$l];
+            $l *= 2;
+        }
+        if ($l == $n && _SMALLER($key, $heap[$l][0])) {
+            $heap[$l >> 1] = $heap[$l];
+            $l *= 2;
+        }
+        $heap[$l >> 1] = $work;
+    }
+}');
+    $heap->merge_arrays(@_);
 }
 
 1;
