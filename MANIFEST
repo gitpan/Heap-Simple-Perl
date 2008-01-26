@@ -1,21 +1,25 @@
 Changes
-Makefile.PL
 MANIFEST
+MANIFEST.SKIP
+META.yml
+Makefile.PL
 README
 lib/Heap/Simple/Any.pm
 lib/Heap/Simple/Array.pm
 lib/Heap/Simple/Function.pm
 lib/Heap/Simple/Hash.pm
-lib/Heap/Simple/Scalar.pm
 lib/Heap/Simple/Less.pm
 lib/Heap/Simple/Method.pm
 lib/Heap/Simple/Number.pm
 lib/Heap/Simple/NumberReverse.pm
 lib/Heap/Simple/Object.pm
 lib/Heap/Simple/Perl.pm
+lib/Heap/Simple/Perl/Package.pm
+lib/Heap/Simple/Scalar.pm
 lib/Heap/Simple/String.pm
 lib/Heap/Simple/StringReverse.pm
 lib/Heap/Simple/Wrapper.pm
+md5-versions
 t/00_load.t
 t/01_basic.t
 t/02_stress.t
@@ -32,4 +36,4 @@ t/speed_fibonacci
 t/speed_hash
 t/speed_priority
 t/speed_scalar
-META.yml                                 Module meta-data (added by MakeMaker)
+todo
