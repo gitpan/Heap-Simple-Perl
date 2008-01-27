@@ -3,7 +3,7 @@
 require 5.004;
 use strict;
 use vars qw($VERSION $opt_n $opt_y);
-$VERSION = "0.07";
+$VERSION = "0.08";
 
 use ExtUtils::MakeMaker;
 BEGIN {
@@ -55,8 +55,8 @@ WriteMakefile(
     NAME		=> 'Heap::Simple::Perl',
     VERSION_FROM	=> 'lib/Heap/Simple/Perl/Package.pm',
     PREREQ_PM		=> {
-        "Heap::Simple"	=> 0.09,	# implementor switch
-        "Test::More"	=> 0.11,	# For the tests only
+        "Heap::Simple"	=> "0.09",	# implementor switch
+        "Test::More"	=> "0.11",	# For the tests only
     },
     ($] >= 5.005 ?    ## Add these new keywords supported since 5.005
       (AUTHOR		=> 'Ton Hospel <Heap-Simple@ton.iguana.be>') : ()),

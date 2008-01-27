@@ -3,7 +3,7 @@ use strict;
 use Carp;
 
 use vars qw($VERSION $auto %used);
-$VERSION = "0.11";
+$VERSION = "0.12";
 $auto = "Auto";
 %used = ();
 
@@ -192,8 +192,11 @@ sub _make {
 
     my $string = "package $package;\n" . shift;
     # Very simple macro expander, but ignore literal strings
-    1 while $string =~ s!(\b_[A-Z_]+)\(($sequence)\)!my $f=$1; 
-$_self->$f($2 =~ /($balanced),?/g)!seg;
+    my $f = "a";
+    # 1 while $string =~ s{(\b_[A-Z_]+)\(($sequence)\)}{$f=$1; $_self->$f($2 =~ /($balanced),?/g)}eg;
+    # Previous line ought to work but actually fails on perl 5.6.2 because
+    # the return value from s///e cannot be trusted
+    $f="",$string =~ s{(\b_[A-Z_]+)\(($sequence)\)}{$f=$1; $_self->$f($2 =~ /($balanced),?/g)}eg while $f;
     if ($string =~ /\bmy\s+\$(\w+)\s*=\s*shift;/g) {
         my $var = $1;
         $string =~ /\$$var\b/g || croak "$_self uses \$$var only once ($string)";
@@ -206,11 +209,14 @@ $_self->$f($2 =~ /($balanced),?/g)!seg;
         }
     }
     # $string =~ s/(sub\s+\w+)\s*{.*\bCarp::croak\b\s*(\"[^\"]+\");.*}/$1 { Carp::croak $2 }/s; # "
-    # Important that these are last one since they can expand to something 
+    # Important that these are last one since they can expand to something
     # that contain the others
-    $string =~ s/\b_(LITERAL|STRING)\b/$1 eq "LITERAL" ?
-        defined $_self->[0]{index} ? $_self->[0]{index} : croak("undefined access") :
-        _stringify($_self->[0]{index})/eg;
+    $string =~ s{\b_(LITERAL|STRING)\b}{
+        $1 eq "LITERAL" ?
+            defined $_self->[0]{index} ? $_self->[0]{index} : croak("undefined access") :
+            _stringify($_self->[0]{index})}eg;
+    $string
+        =~ s/^([^\S\n]*sub\s+(\w+)\s*\{)/#line 1 "${package}::$2"\n$1/mg;
     print STDERR "Code:\n$string\n" if DEBUG;
     my $err = $@;
     eval $string;

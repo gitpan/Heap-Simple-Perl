@@ -1,11 +1,11 @@
-# Generated on 2008-01-26 18:45:32 UT using /usr/local/bin/release_pm
+# Generated on 2008-01-27 14:59:06 UT using /usr/local/bin/release_pm
 BEGIN
 DIGITS 2
-RELEASE 0.12
-VERSION 2aadb43fa6904e7b8c0e389b960741cb 0.12 Changes
-VERSION 0640b721e2732fa42f1aef9ce16f28b7 0.07 MANIFEST
-VERSION 17aa3fe7b3423586173c63af56bd4e72 1.00 MANIFEST.SKIP
-VERSION de414dc74d0dfb9964a190412177becd 0.07 Makefile.PL
+RELEASE 0.13
+VERSION f11621b9e75bf5d07651f4eb4ee9c8d9 0.13 Changes
+VERSION 02eba4016d44aff6bc586ce53744c39a 0.08 MANIFEST
+VERSION 0cedd68fb0573b5e7d9e4cb6f5192476 1.01 MANIFEST.SKIP
+VERSION 622706cf742cd8634d7867c6ca5484dc 0.08 Makefile.PL
 VERSION 825fc49a345c6c3e23d8f7f80f74bb28 0.08 README
 VERSION 4946416599f8cf81fe961b5e81016045 0.03 lib/Heap/Simple/Any.pm
 VERSION dc2e7e255ed30df88521a36187b0e7e9 0.03 lib/Heap/Simple/Array.pm
@@ -16,8 +16,8 @@ VERSION b4ef54904499dcfb3488fe66e1ddc1c1 0.05 lib/Heap/Simple/Method.pm
 VERSION 4a605c7b99dec1261e48cdf05b2eded3 0.03 lib/Heap/Simple/Number.pm
 VERSION bc9b5c0270ca26831867bf32d2f91468 0.03 lib/Heap/Simple/NumberReverse.pm
 VERSION 13aee2d14d22d14c382d77129e2112ae 0.03 lib/Heap/Simple/Object.pm
-VERSION 2103b26a2fe014b292ab32b3fd5ee786 0.11 lib/Heap/Simple/Perl.pm
-VERSION ed0b2a9cbd6a90a11d70f284c50e9672 0.12 lib/Heap/Simple/Perl/Package.pm
+VERSION 319f9486ee32d5acc1c9c8f5bfafa02f 0.12 lib/Heap/Simple/Perl.pm
+VERSION f3a4bc5d6d90f4df0e3346f089427211 0.13 lib/Heap/Simple/Perl/Package.pm
 VERSION 01dbd9f00e7fa5e990cfa459cb5ec932 0.02 lib/Heap/Simple/Scalar.pm
 VERSION 17aa19c00461e1d60fb74e48e55cbddc 0.02 lib/Heap/Simple/String.pm
 VERSION 88eac0dad323c60fb53dc48cdaa0b3a4 0.03 lib/Heap/Simple/StringReverse.pm
@@ -39,6 +39,7 @@ VERSION 4b59cfe1cab205ce18b1cc99729c2d39 0.01 t/speed_hash
 VERSION 5da7c27a9bd47277c6045983df52f7df 0.01 t/speed_priority
 VERSION 46500aeda45355eba592650f3ba65993 0.01 t/speed_scalar
 VERSION b65ee6f8113c6b83cf2c31752340ff27 1.00 todo
+RELEASED 0.13 0.13 Changes
 RELEASED 0.12 0.12 Changes
 RELEASED 0.11 0.11 Changes
 RELEASED 0.10 0.10 Changes
@@ -51,6 +52,7 @@ RELEASED 0.04 0.04 Changes
 RELEASED 0.03 0.03 Changes
 RELEASED 0.02 0.02 Changes
 RELEASED 0.01 0.01 Changes
+RELEASED 0.08 0.13 MANIFEST
 RELEASED 0.07 0.12 MANIFEST
 RELEASED 0.06 0.08 MANIFEST
 RELEASED 0.05 0.07 MANIFEST
@@ -58,7 +60,9 @@ RELEASED 0.04 0.06 MANIFEST
 RELEASED 0.03 0.03 MANIFEST
 RELEASED 0.02 0.02 MANIFEST
 RELEASED 0.01 0.01 MANIFEST
+RELEASED 1.01 0.13 MANIFEST.SKIP
 RELEASED 1.00 0.12 MANIFEST.SKIP
+RELEASED 0.08 0.13 Makefile.PL
 RELEASED 0.07 0.12 Makefile.PL
 RELEASED 0.06 0.10 Makefile.PL
 RELEASED 0.05 0.09 Makefile.PL
@@ -113,12 +117,14 @@ RELEASED 0.01 0.01 lib/Heap/Simple/NumberReverse.pm
 RELEASED 0.03 0.11 lib/Heap/Simple/Object.pm
 RELEASED 0.02 0.07 lib/Heap/Simple/Object.pm
 RELEASED 0.01 0.03 lib/Heap/Simple/Object.pm
+RELEASED 0.12 0.13 lib/Heap/Simple/Perl.pm
 RELEASED 0.11 0.11 lib/Heap/Simple/Perl.pm
 RELEASED 0.10 0.10 lib/Heap/Simple/Perl.pm
 RELEASED 0.09 0.09 lib/Heap/Simple/Perl.pm
 RELEASED 0.08 0.08 lib/Heap/Simple/Perl.pm
 RELEASED 0.07 0.07 lib/Heap/Simple/Perl.pm
 RELEASED 1.00 0.12 lib/Heap/Simple/Perl/Package.pm
+RELEASED 0.13 0.13 lib/Heap/Simple/Perl/Package.pm
 RELEASED 0.12 0.12 lib/Heap/Simple/Perl/Package.pm
 RELEASED 0.02 0.07 lib/Heap/Simple/Scalar.pm
 RELEASED 0.02 0.07 lib/Heap/Simple/String.pm

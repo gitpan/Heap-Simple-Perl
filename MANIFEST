@@ -1,7 +1,6 @@
 Changes
 MANIFEST
 MANIFEST.SKIP
-META.yml
 Makefile.PL
 README
 lib/Heap/Simple/Any.pm
@@ -37,3 +36,4 @@ t/speed_hash
 t/speed_priority
 t/speed_scalar
 todo
+META.yml                                 Module meta-data (added by MakeMaker)
