@@ -26,7 +26,7 @@ BEGIN {
 
 my $option_file = "$Bin/options";
 my %options;
-open(my $fh, $option_file) || die "Could not open '$option_file': $!";
+open(my $fh, "< $option_file") || die "Could not open '$option_file': $!";
 {
     local $_;
     while (<$fh>) {

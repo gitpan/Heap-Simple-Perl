@@ -1,12 +1,17 @@
 Revision history for Perl extension Heap::Simple::Perl.
 
+0.14	2008-01-27 23:43:15 UT
+	- No functional changes
+	- Use two argument open to handle the t/options file. Needed for old
+	  perls before 5.6. Only relevant for "make test"
+
 0.13	2008-01-27 14:59:06 UT
-	- Work around a bug in perl 5.6 where you cannot trust the return 
+	- Work around a bug in perl 5.6 where you cannot trust the return
           value of s///ge
 	- Quote version dependencies in Makefile.PL to avoid having some
 	  systems depend on 9e-2 instead of 0.09
 	- Add a line directive to the partial evaluations so that errors
-	  refer to logical names like 
+	  refer to logical names like
 	  "Heap::Simple::Auto::Number::Scalar::insert line 3" instead of
 	  "eval 25 line 3"
 

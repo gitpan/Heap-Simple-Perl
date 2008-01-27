@@ -3,7 +3,7 @@
 require 5.004;
 use strict;
 use vars qw($VERSION $opt_n $opt_y);
-$VERSION = "0.08";
+$VERSION = "0.09";
 
 use ExtUtils::MakeMaker;
 BEGIN {
@@ -36,7 +36,7 @@ EOT
 }
 my $option_file = "t/options";
 my $new = "$option_file.new.$$";
-open(my $fh, ">", $new) || die "Could not open '$new': $!";
+open(my $fh, "> $new") || die "Could not open '$new': $!";
 printf($fh "BENCHMARK=%d\nBENCHMARK_OTHERS=%d\n",
        $benchmark ? 1 : 0,
        $benchmark_others ? 1 : 0) || die "Error writing to '$new': $!";
